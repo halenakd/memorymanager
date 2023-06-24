@@ -15,7 +15,7 @@
 
 /* -----VARIAVEIS EXTERNAS----- */
 
-extern void *memBase;lll 
+extern void *memBase;
 extern MemInfo *memInfo;
 
 
@@ -42,13 +42,21 @@ int main()
 
     debug();
 
-    void *endereco = memBase;
+    //struct bla b1 = 
+    void *bla = 0;
+    kalloc(bla + 4095, 2048);
+    //lpa_marcarUsado(bla + 4095, 2048);
+    lpa_printfLpa(memInfo->lpa);
+
+    kfree(bla + 4095);
+
+    /*void *endereco = memBase;
 
     printf("memBase na main: %p\n", endereco);
 
     Node * no = find(endereco + 1024, &(memInfo->lpa->nodes[0]));
 
-    list_printNode(no);
+    list_printNode(no);*/
 
     finalizar();
 

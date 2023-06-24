@@ -56,18 +56,21 @@ void inicializar(long tamanho_);
 void finalizar();
 void debug();
 void lpa_marcarUsado(void *ptr, unsigned long comprimento);
-//void *kalloc(struct info* informacoes, size_t tamanho_);
-//void kfree(struct info* informacoes, void *ptr);
+void lpa_devolverUsado(void *ptr);
+void *kalloc(void *endereco, size_t tamanho_);
+void kfree(void *ptr);
 
 
 /* -----LISTAS----- */
 
 
 /* listaPreAlocada, nodes */
-Node *find(void *endereco, Node *base);
+Node *findParaAlocar(void *endereco, Node *base);
+Node *findParaDevolver(void *endereco, Node *base);
 void lpa_init(ListaPreAlocada *lpa);
 void lpa_memoriaLivre(ListaPreAlocada *lpa, long tamanho_, void *mem_base);
 Node *lpa_getNode(ListaPreAlocada *lpa);
+void lpa_devolverNode(Node *node);
 void list_printNode(Node *n);
 void lpa_printfLpa(ListaPreAlocada *lpa);
 void lpa_printfLpaNode(ListaPreAlocada *lpa);

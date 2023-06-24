@@ -37,6 +37,7 @@ void inicializar(long tamanho_)
     /* inicializando a memoria, a lista de memorias, todo mundo, 
     * nesse ponto ele nao esta correto, pois memInfo e lpa nao estao marcados como uso */
     lpa_memoriaLivre(lpa, tamanho_, memBase); // marca toda a memoria como livre
+    printf("\nFUNÇÃO INICIALIZAR\n");
     lpa_printfLpaNode(lpa); 
     lpa_marcarUsado(memInfo, sizeof(MemInfo)); // marca o inicio que tem as infos da memoria como usado
 }
@@ -50,13 +51,15 @@ void finalizar()
 
 void debug()
 {
+    printf("\nFUNÇÃO DEBUG\n");
     printf("memBase: %p\n", memBase);
 }
 
 
 void lpa_marcarUsado(void *ptr, unsigned long comprimento)
 {
-    Node * no = find(ptr, memInfo->base); // acha o no em que o ponteiro esta contido
+    Node * no = findParaAlocar(ptr, memInfo->base); // acha o no em que o ponteiro esta contido
+    printf("\nFUNÇÃO MARCARUSADO\n");
     printf("no encontrado lpa_marcarusado: %p\n", ptr);
     list_printNode(no);
     /* o no foi encontrado? */
@@ -133,38 +136,91 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
             }
         }
         else
+        {
+            printf("\nFUNÇÃO MARCARUSADO\n");
             printf("Impossivel marcar ocupado, no ja esta ocupado \n");
+        }    
     }
 }
 
 
+void lpa_devolverUsado(void *ptr)
+{
+    printf("\nFUNÇÃO DEVOLVERUSADO\n"); 
+    Node * no = findParaDevolver(ptr, memInfo->base);
+
+    if(no->next->status == 'L' && no->prev->status == 'L')
+    {
+        no->prev->comprimento = no->prev->comprimento + no->comprimento + no->next->comprimento;
+        lpa_devolverNode(no);
+        lpa_devolverNode(no->next);
+
+        // da um free no no // remove ele da lista
+        // da um free no no->next // remove ele da lista
+    }
+    else if(no->next->status == 'L')
+    {
+        no->next->comprimento = no->comprimento + no->next->comprimento;
+        no->next->endereco = no->endereco;
+        lpa_devolverNode(no);
+        // da um free no no // remove ele da lista
+    }
+    else if(no->prev->status == 'L')
+    {
+        no->prev->comprimento = no->prev->comprimento + no->comprimento;
+        lpa_devolverNode(no);
+        // da um free no no // remove ele da lista
+    }
+    else // prev e next == 'O'
+    {
+        no->status = 'L';
+    }
+}
+
+
+
 /* ----------KALLOC E KFREE---------- */
 
-/*void *kalloc(struct info* informacoes, size_t tamanho_)
+void *kalloc(void *endereco, size_t tamanho_)
 {
-    informacoes->posAtual = informacoes->posAtual + tamanho_;
-    return informacoes->posAtual;
+    lpa_marcarUsado(endereco, tamanho_);
+    printf("\nFUNÇÃO KALLOC\n");
     printf("Memoria alocada!\n");
-}*/
+    return endereco;
+}
 
 
-/*void kfree(struct info* informacoes, void *ptr)
+void kfree(void *ptr)
 {
-    int tamanho = remover(informacoes, ptr);
-    informacoes->posAtual = informacoes->posAtual - tamanho;
+    lpa_devolverUsado(ptr);
     printf("Memoria liberada!\n");
-}*/
+}
 
 
 /* ----------LISTAS---------- */
 
-Node *find(void *endereco, Node *base)
+Node *findParaAlocar(void *endereco, Node *base)
 {
+    printf("\nFUNÇÃO FINDPARAALOCAR\n");
     while(base != NULL && !(base->endereco <= endereco && 
         endereco <= (base->endereco + base->comprimento) )) 
     {
         printf("bla\n");
         base = base->next;
+    }
+    return base;
+}
+
+
+Node *findParaDevolver(void *endereco, Node *base)
+{
+    printf("\nFUNÇÃO FINDPARADEVOLVER\n");
+    while(base != NULL && endereco != base->endereco) 
+    {
+        printf("ble\n");
+        base = base->next;
+        printf("endereco %p", endereco);
+        printf("base-endereco %p", base->endereco);
     }
     return base;
 }
@@ -197,7 +253,8 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
     se nao tiver alocar proximo no,
     se tiver procurar no bitmap, reduzir o numero de livres,
     marcar ocupado no bitmap e retornar o ponteiro para o cara certo */
-   
+    
+    printf("\nFUNÇÃO GETNODE\n");
     // verificar se há nós livres na lista
     while(1)
     {
@@ -205,13 +262,11 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
         // caso não tenha nenhum nó livre na lista, criar um nó novo
         if(lpa->livres == 0 && lpa->next == NULL)
         {
-            /*ListaPreAlocada *newLpa = NULL;
-            newLpa = (ListaPreAlocada*)(memBase + MEMINFOADDR + sizeof(MemInfo));  // aloca a primeira listaPreAlocada
+            ListaPreAlocada *newLpa = NULL;
+            newLpa = (ListaPreAlocada*)(memBase + MEMINFOADDR + sizeof(MemInfo));
             memInfo->lpa->next = newLpa;
             lpa_init(newLpa);
-            lpa_marcarUsado(ListaPreAlocado, sizeof(ListaPreAlocada));*/
-            //falta coisas
-
+            lpa_marcarUsado(newLpa, sizeof(ListaPreAlocada));
         }
         else
         {
@@ -247,6 +302,7 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
                 lpa->nodes[pos].pos = pos; // atribui a posição pos ao campo pos do nó alocado
                 lpa->nodes[pos].pai = lpa; // atribui o ponteiro para a lista pré-alocada lpa ao campo pai do nó alocado
             
+                printf("\nFUNÇÃO GETNODE\n");
                 printf("pos %lu\n", pos); // imprimir a posição do nó alocado
                 printf("lpa->bitmap[posAtual] %lu\n", lpa->bitmap[posAtual]); // imprimir o estado atual do bitmap
             
@@ -260,7 +316,35 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
         }
     }
     return 0;
-} 
+}
+
+
+void lpa_devolverNode(Node *node)
+{
+    if (node == NULL)
+        return;
+
+    ListaPreAlocada *lpa = node->pai;
+
+    // Obtenha a posição do nó no bitmap
+    unsigned long pos = node->pos;
+
+    // Calcule a posição do bit no bitmap
+    unsigned long posAtual = pos / (sizeof(unsigned long) * 8);
+
+    // Calcule o deslocamento do bit dentro do unsigned long
+    unsigned long offset = pos % (sizeof(unsigned long) * 8);
+
+    // Desmarque o bit correspondente no bitmap
+    lpa->bitmap[posAtual] &= ~(1UL << offset);
+
+    // Incremente o número de nós livres na lista pré-alocada
+    ++lpa->livres;
+
+    // Limpe os campos do nó devolvido
+    node->pos = 0;
+    node->pai = NULL;
+}
 
 
 /* ----------PRINTS---------- */
@@ -269,6 +353,7 @@ void list_printNode(Node *n)
 {
     if(n != NULL)
     {
+        printf("\nFUNÇÃO PRINTNODE\n");
         printf("status: %c, ", n->status);
         printf("endereco: %p, ", n->endereco);
         printf("comprimento: %lu, ", n->comprimento);
@@ -278,13 +363,16 @@ void list_printNode(Node *n)
         printf("prev: %p\n", n->prev);        
     }
     else
+    {
+        printf("\nFUNÇÃO PRINTNODE\n");
         printf("Node eh nulo\n");
-
+    }
 }
 
 
 void lpa_printfLpa(ListaPreAlocada *lpa)
 {
+    printf("\nFUNÇÃO PRINTLPA\n");
     while(lpa != NULL)
     {
         lpa_printfLpaNode(lpa);
@@ -295,6 +383,7 @@ void lpa_printfLpa(ListaPreAlocada *lpa)
 
 void lpa_printfLpaNode(ListaPreAlocada *lpa)
 {
+    printf("\nFUNÇÃO PRINTLPANODE\n");
     printf("este lpa: %p\n", lpa);
     printf("livres: %d\n", lpa->livres);
     printf("bitmap: \n");
