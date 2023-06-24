@@ -25,6 +25,7 @@ void devolveMemoria(int *memoria)
 
 void inicializar(long tamanho_)
 {
+    printf("\nFUNÇÃO INICIALIZAR\n");
     ListaPreAlocada *lpa = NULL;
     /* alocando espaco para a simulacao das operacoes com memoria */
     memBase = criaMemoria(tamanho_);
@@ -37,9 +38,9 @@ void inicializar(long tamanho_)
     /* inicializando a memoria, a lista de memorias, todo mundo, 
     * nesse ponto ele nao esta correto, pois memInfo e lpa nao estao marcados como uso */
     lpa_memoriaLivre(lpa, tamanho_, memBase); // marca toda a memoria como livre
-    printf("\nFUNÇÃO INICIALIZAR\n");
     lpa_printfLpaNode(lpa); 
     lpa_marcarUsado(memInfo, sizeof(MemInfo)); // marca o inicio que tem as infos da memoria como usado
+    printf("------------");
 }
 
 
@@ -53,6 +54,7 @@ void debug()
 {
     printf("\nFUNÇÃO DEBUG\n");
     printf("memBase: %p\n", memBase);
+    printf("------------");
 }
 
 
@@ -96,20 +98,21 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                     new->endereco = ptr;
                     new->comprimento = comprimento;
                     new->prev = no;
-                    new->next = no->next;
                     new->status = 'O';
 
                     /* nó novo para a região livre que sobrou depois */
                     Node *newD = lpa_getNode(memInfo->lpa);
-                    newD->endereco = t2 + 1;
-                    newD->comprimento = no->comprimento - comprimento;
+                    newD->endereco = t2;
+                    newD->comprimento = t1 - t2;
                     newD->prev = new;
                     newD->next = no->next;
                     newD->status = 'L';
 
+                    new->next = newD;
+
                     /* nó já existente para a região livre que sobrou antes */
                     no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
-                    no->next = newD; // antes tava = no
+                    no->next = new; // antes tava = no
                 }
             }
             else if(no->endereco == ptr) // começam no mesmo lugar, então nao sobra espaço antes, mas pode sobrar espaço livre depois da região alocada
@@ -141,6 +144,7 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
             printf("Impossivel marcar ocupado, no ja esta ocupado \n");
         }    
     }
+    printf("------------");
 }
 
 
@@ -175,6 +179,7 @@ void lpa_devolverUsado(void *ptr)
     {
         no->status = 'L';
     }
+    printf("------------");
 }
 
 
@@ -186,6 +191,7 @@ void *kalloc(void *endereco, size_t tamanho_)
     lpa_marcarUsado(endereco, tamanho_);
     printf("\nFUNÇÃO KALLOC\n");
     printf("Memoria alocada!\n");
+    printf("------------");
     return endereco;
 }
 
@@ -194,6 +200,7 @@ void kfree(void *ptr)
 {
     lpa_devolverUsado(ptr);
     printf("Memoria liberada!\n");
+    printf("------------");
 }
 
 
@@ -209,6 +216,7 @@ Node *findParaAlocar(void *endereco, Node *base)
         base = base->next;
     }
     return base;
+    printf("------------");
 }
 
 
@@ -223,6 +231,7 @@ Node *findParaDevolver(void *endereco, Node *base)
         printf("base-endereco %p", base->endereco);
     }
     return base;
+    printf("------------");
 }
 
 
@@ -302,7 +311,6 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
                 lpa->nodes[pos].pos = pos; // atribui a posição pos ao campo pos do nó alocado
                 lpa->nodes[pos].pai = lpa; // atribui o ponteiro para a lista pré-alocada lpa ao campo pai do nó alocado
             
-                printf("\nFUNÇÃO GETNODE\n");
                 printf("pos %lu\n", pos); // imprimir a posição do nó alocado
                 printf("lpa->bitmap[posAtual] %lu\n", lpa->bitmap[posAtual]); // imprimir o estado atual do bitmap
             
@@ -315,12 +323,14 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
             }
         }
     }
+    printf("------------");
     return 0;
 }
 
 
 void lpa_devolverNode(Node *node)
 {
+    printf("\nFUNÇÃO DEVOLVERNODE\n");
     if (node == NULL)
         return;
 
@@ -344,6 +354,7 @@ void lpa_devolverNode(Node *node)
     // Limpe os campos do nó devolvido
     node->pos = 0;
     node->pai = NULL;
+    printf("------------");
 }
 
 
@@ -353,7 +364,7 @@ void list_printNode(Node *n)
 {
     if(n != NULL)
     {
-        printf("\nFUNÇÃO PRINTNODE\n");
+        //printf("\nFUNÇÃO PRINTNODE\n");
         printf("status: %c, ", n->status);
         printf("endereco: %p, ", n->endereco);
         printf("comprimento: %lu, ", n->comprimento);
@@ -364,7 +375,6 @@ void list_printNode(Node *n)
     }
     else
     {
-        printf("\nFUNÇÃO PRINTNODE\n");
         printf("Node eh nulo\n");
     }
 }
@@ -378,12 +388,13 @@ void lpa_printfLpa(ListaPreAlocada *lpa)
         lpa_printfLpaNode(lpa);
         lpa = lpa->next;
     }
+    printf("------------");
 }
 
 
 void lpa_printfLpaNode(ListaPreAlocada *lpa)
 {
-    printf("\nFUNÇÃO PRINTLPANODE\n");
+    //printf("\nFUNÇÃO PRINTLPANODE\n");
     printf("este lpa: %p\n", lpa);
     printf("livres: %d\n", lpa->livres);
     printf("bitmap: \n");

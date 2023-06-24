@@ -20,7 +20,8 @@ typedef struct Node {
 } Node;
 
 
-#define NPREALOCADO 256
+//#define NPREALOCADO 256
+#define NPREALOCADO 8
 #define NBITMAP NPREALOCADO/8
 
 typedef struct ListaPreAlocada {

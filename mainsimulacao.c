@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <strings.h>
+#include <string.h>
 
 
 /* -----VARIAVEIS GLOBAIS----- */
@@ -40,15 +40,54 @@ int main()
 
     inicializar(TAMANHO_MEMORIA);
 
-    debug();
+    // Testar alocação e liberação de memória
+    //int* ptr1 = 0;
+    //int* ptr1 = (int*)kalloc(&ptr1 + 1200, sizeof(int));
+    /*if (ptr1 != NULL) {
+        *ptr1 = 10;
+        printf("Valor de ptr1: %d\n", *ptr1);
+        //kfree(ptr1);
+    }*/
 
-    //struct bla b1 = 
-    void *bla = 0;
-    kalloc(bla + 4095, 2048);
-    //lpa_marcarUsado(bla + 4095, 2048);
+    /*char* ptr2 = (char*)kalloc(&ptr2, 5 * sizeof(char));
+    if (ptr2 != NULL) {
+        strcpy(ptr2, "Hello");
+        printf("Valor de ptr2: %s\n", ptr2);
+        //kfree(ptr2);
+    }
+
+    double* ptr3 = (double*)kalloc(&ptr3, 3 * sizeof(double));
+    if (ptr3 != NULL) {
+        for (int i = 0; i < 3; i++) {
+            ptr3[i] = i + 0.5;
+            printf("Valor de ptr3[%d]: %f\n", i, ptr3[i]);
+        }
+        //kfree(ptr3);
+    }*/
+
+    //lpa_getNode(memInfo->lpa);
+
+    //debug();
+
+    void *bla = kalloc(memBase + 4096, 2048);
+    //void *bla1 = kalloc(memBase + 4096, 2048);
+    //void *bla2 = kalloc(memBase + 8296, 2048);
+    void *bla3 = kalloc(memBase + 6146, 2048);
+    void *bla2 = kalloc(memBase + 8296, 2048);
+    /*void *bla1 = 0;
+    void *bla2 = 0;
+    void *bla3 = 0;
+    void *bla4 = 0;*/
+
+    //bla = kalloc(memBase + 4096, 2048);
+    //kalloc(bla + 12000, 2300);
+    //kalloc(bla + 7068, 3200);
+    //kalloc(bla + 9800, 1000);
+    //lpa_marcarUsado(bla + 4095, 2048);*/
+
     lpa_printfLpa(memInfo->lpa);
 
-    kfree(bla + 4095);
+    //kfree(memBase + 4096);
 
     /*void *endereco = memBase;
 
