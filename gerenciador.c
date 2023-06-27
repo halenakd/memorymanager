@@ -61,9 +61,9 @@ void debug()
 void lpa_marcarUsado(void *ptr, unsigned long comprimento)
 {
     Node * no = findParaAlocar(ptr, memInfo->base); // acha o no em que o ponteiro esta contido
-    printf("\nFUNÇÃO MARCARUSADO\n");
-    printf("no encontrado lpa_marcarusado: %p\n", ptr);
-    list_printNode(no);
+    //printf("\nFUNÇÃO MARCARUSADO\n");
+    //printf("no encontrado lpa_marcarusado: %p\n", ptr);
+    //list_printNode(no);
     /* o no foi encontrado? */
     if(no != NULL)
     {
@@ -85,10 +85,19 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                     new->prev = no;
                     new->next = no->next;
                     new->status = 'O';
+                    
+                    if (no->prev != NULL)
+                        no->prev->next = new;
 
                     /* nó da região livre que sobrou antes */
                     no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
                     no->next = new;
+
+                    // atualizando o último nó da memória
+                    if(new->next == NULL)
+                    {
+                        memInfo->fim = new;
+                    }
                 }
                 // tem espaço livre antes e tem espaco livre depois
                 else if(t2 < t1)
@@ -113,6 +122,12 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                     /* nó já existente para a região livre que sobrou antes */
                     no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
                     no->next = new; // antes tava = no
+
+                    // atualizando o último nó da memória
+                    if(newD->next == NULL)
+                    {
+                        memInfo->fim = newD;
+                    }
                 }
             }
             else if(no->endereco == ptr) // começam no mesmo lugar, então nao sobra espaço antes, mas pode sobrar espaço livre depois da região alocada
@@ -135,8 +150,16 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                     no->comprimento = comprimento;
                     no->next = new;
                     no->status = 'O';
+
+                    // atualizando o último nó da memória
+                    if(new->next == NULL)
+                    {
+                        memInfo->fim = new;
+                    }
                 }
             }
+            // atualizando a quantidade de memória livre 
+            memInfo->memLivre = memInfo->memLivre - comprimento;
         }
         else
         {
@@ -151,34 +174,45 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
 void lpa_devolverUsado(void *ptr)
 {
     printf("\nFUNÇÃO DEVOLVERUSADO\n"); 
-    Node * no = findParaDevolver(ptr, memInfo->base);
+    Node * no = findParaDesalocar(ptr, memInfo->base);
 
-    if(no->next->status == 'L' && no->prev->status == 'L')
+    if(no != NULL)
     {
-        no->prev->comprimento = no->prev->comprimento + no->comprimento + no->next->comprimento;
-        lpa_devolverNode(no);
-        lpa_devolverNode(no->next);
-
-        // da um free no no // remove ele da lista
-        // da um free no no->next // remove ele da lista
+        // vai juntar 3 nós livres em 1 só, pois tem um L antes e um L depois do nó a ser devolvido
+        // então é L, O, L e vai ficar L, L, L = L
+        if(no->next->status == 'L' && no->prev->status == 'L')
+        {
+            no->prev->comprimento = no->prev->comprimento + no->comprimento + no->next->comprimento;
+            lpa_devolverNode(no);
+            lpa_devolverNode(no->next);
+        }
+        // vai juntar dois L, pois tem um L depois do nó a ser devolvido
+        // então é O, O, L  e vai ficar O, L, L = O, L
+        else if(no->next->status == 'L')
+        {
+            no->next->comprimento = no->comprimento + no->next->comprimento;
+            no->next->endereco = no->endereco;
+            lpa_devolverNode(no);
+        }
+        // vai juntar dois L, pois tem um L antes do nó a ser devolvido
+        // então é L, O, O  e vai ficar L, L, O = L, O
+        else if(no->prev->status == 'L')
+        {
+            no->prev->comprimento = no->prev->comprimento + no->comprimento;
+            lpa_devolverNode(no);
+        }
+        // não tem nós livres antes, nem depois
+        // então é O, O, O e vai ficar O, L, O
+        else // prev e next == 'O'
+        {
+            no->status = 'L';
+        }
     }
-    else if(no->next->status == 'L')
+    else
     {
-        no->next->comprimento = no->comprimento + no->next->comprimento;
-        no->next->endereco = no->endereco;
-        lpa_devolverNode(no);
-        // da um free no no // remove ele da lista
-    }
-    else if(no->prev->status == 'L')
-    {
-        no->prev->comprimento = no->prev->comprimento + no->comprimento;
-        lpa_devolverNode(no);
-        // da um free no no // remove ele da lista
-    }
-    else // prev e next == 'O'
-    {
-        no->status = 'L';
-    }
+        printf("\nFUNÇÃO DEVOLVERUSADO\n");
+        printf("Impossivel devolver memória, nó não está sendo usado \n");
+    } 
     printf("------------");
 }
 
@@ -209,29 +243,35 @@ void kfree(void *ptr)
 Node *findParaAlocar(void *endereco, Node *base)
 {
     printf("\nFUNÇÃO FINDPARAALOCAR\n");
-    while(base != NULL && !(base->endereco <= endereco && 
-        endereco <= (base->endereco + base->comprimento) )) 
-    {
+    // verifica se o endereço é menor que o endereço do primeiro nó
+    if (base != NULL && endereco < base->endereco) {
+        return NULL;
+    }
+    
+    // encontra o nó em que o endereço faz parte do intervalo
+    while (base != NULL && !(base->endereco <= endereco && endereco < (base->endereco + base->comprimento))) {
         printf("bla\n");
         base = base->next;
     }
-    return base;
     printf("------------");
+    return base;
 }
 
 
-Node *findParaDevolver(void *endereco, Node *base)
+Node *findParaDesalocar(void *endereco, Node *base)
 {
-    printf("\nFUNÇÃO FINDPARADEVOLVER\n");
-    while(base != NULL && endereco != base->endereco) 
+    printf("\nFUNÇÃO FINDPARADESALOCAR\n");
+    // encontra o nó que tem esse endereço
+    while (base != NULL) 
     {
-        printf("ble\n");
+        if (endereco == base->endereco) 
+        {
+            return base;
+        }    
         base = base->next;
-        printf("endereco %p", endereco);
-        printf("base-endereco %p", base->endereco);
     }
-    return base;
     printf("------------");
+    return base;
 }
 
 
@@ -245,6 +285,7 @@ void lpa_init(ListaPreAlocada *lpa)
 
 void lpa_memoriaLivre(ListaPreAlocada *lpa, long tamanho_, void *memBase)
 {
+    // marca a memória inicialmente como livre, cria o primeiro nó
     lpa_init(lpa);
     Node *node = lpa_getNode(lpa);
     node->status = 'L';
@@ -267,13 +308,13 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
     // verificar se há nós livres na lista
     while(1)
     {
-        printf("Livres comeco: %i\n", lpa->livres);
         // caso não tenha nenhum nó livre na lista, criar um nó novo
         if(lpa->livres == 0 && lpa->next == NULL)
         {
             ListaPreAlocada *newLpa = NULL;
-            newLpa = (ListaPreAlocada*)(memBase + MEMINFOADDR + sizeof(MemInfo));
-            memInfo->lpa->next = newLpa;
+            void *t1 = memInfo->fim->prev->endereco + memInfo->fim->prev->comprimento;
+            newLpa = (ListaPreAlocada*)(t1);
+            lpa->next = newLpa;
             lpa_init(newLpa);
             lpa_marcarUsado(newLpa, sizeof(ListaPreAlocada));
         }
@@ -313,8 +354,7 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
             
                 printf("pos %lu\n", pos); // imprimir a posição do nó alocado
                 printf("lpa->bitmap[posAtual] %lu\n", lpa->bitmap[posAtual]); // imprimir o estado atual do bitmap
-            
-                printf("Livres fim: %i\n", lpa->livres);
+
                 return &(lpa->nodes[pos]); // retorna o endereço de memória do nó alocado
             }
             else
@@ -336,22 +376,28 @@ void lpa_devolverNode(Node *node)
 
     ListaPreAlocada *lpa = node->pai;
 
-    // Obtenha a posição do nó no bitmap
-    unsigned long pos = node->pos;
+    while (lpa != NULL && lpa->next != NULL && lpa->next != node->pai) {
+        lpa = lpa->next;
+    }
 
-    // Calcule a posição do bit no bitmap
-    unsigned long posAtual = pos / (sizeof(unsigned long) * 8);
+    // checagem para caso o nó não esteja em nenhuma lpa
+    if (lpa == NULL) {
+        printf("lpa nao encontrada.\n");
+        return;
+    }
 
-    // Calcule o deslocamento do bit dentro do unsigned long
-    unsigned long offset = pos % (sizeof(unsigned long) * 8);
+    // operações com o bitmap
+    unsigned long pos = node->pos; // pega a posição do nó no bitmap
+    
+    unsigned long posAtual = pos / (sizeof(unsigned long) * 8); // calcula a posição do bit no bitmap
 
-    // Desmarque o bit correspondente no bitmap
-    lpa->bitmap[posAtual] &= ~(1UL << offset);
+    unsigned long offset = pos % (sizeof(unsigned long) * 8); // calcula o deslocamento do bit dentro do unsigned long
 
-    // Incremente o número de nós livres na lista pré-alocada
-    ++lpa->livres;
+    lpa->bitmap[posAtual] &= ~(1UL << offset); // desmarca o bit correspondente no bitmap
 
-    // Limpe os campos do nó devolvido
+    ++lpa->livres; // incrementa o numero de nós livres na lpa
+
+    // limpa os campos do nó devolvido
     node->pos = 0;
     node->pai = NULL;
     printf("------------");

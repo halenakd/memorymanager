@@ -20,8 +20,8 @@ typedef struct Node {
 } Node;
 
 
-//#define NPREALOCADO 256
-#define NPREALOCADO 8
+#define NPREALOCADO 256
+//#define NPREALOCADO 8
 #define NBITMAP NPREALOCADO/8
 
 typedef struct ListaPreAlocada {
@@ -38,8 +38,7 @@ typedef struct ListaPreAlocada {
 
 typedef struct MemInfo{
     long int nodesAlocados;
-    void *inicio;
-    void *fim;
+    Node *fim;
     long int memLivre;
     long int memTotal;
     ListaPreAlocada *lpa;
@@ -67,7 +66,7 @@ void kfree(void *ptr);
 
 /* listaPreAlocada, nodes */
 Node *findParaAlocar(void *endereco, Node *base);
-Node *findParaDevolver(void *endereco, Node *base);
+Node *findParaDesalocar(void *endereco, Node *base);
 void lpa_init(ListaPreAlocada *lpa);
 void lpa_memoriaLivre(ListaPreAlocada *lpa, long tamanho_, void *mem_base);
 Node *lpa_getNode(ListaPreAlocada *lpa);

@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdint.h>
+
 
 
 /* -----VARIAVEIS GLOBAIS----- */
@@ -11,6 +15,7 @@
 //#define TAMANHO_MEMORIA 512 * 1024 * 1024
 #define TAMANHO_MEMORIA 1 << 30
 #define PAGE_SIZE 1 << 14
+
 
 
 /* -----VARIAVEIS EXTERNAS----- */
@@ -40,62 +45,65 @@ int main()
 
     inicializar(TAMANHO_MEMORIA);
 
-    // Testar alocação e liberação de memória
-    //int* ptr1 = 0;
-    //int* ptr1 = (int*)kalloc(&ptr1 + 1200, sizeof(int));
-    /*if (ptr1 != NULL) {
-        *ptr1 = 10;
-        printf("Valor de ptr1: %d\n", *ptr1);
-        //kfree(ptr1);
-    }*/
+    /* Testes */
 
-    /*char* ptr2 = (char*)kalloc(&ptr2, 5 * sizeof(char));
-    if (ptr2 != NULL) {
-        strcpy(ptr2, "Hello");
-        printf("Valor de ptr2: %s\n", ptr2);
-        //kfree(ptr2);
+    int loop = 3;
+    int NALOCACOES = 10;
+    int NDESALOCACOES = NALOCACOES/2;
+
+    void* allocatedAddresses[NALOCACOES];  // array para armazenar os endereços alocados
+    void *bla;
+
+    srand(time(NULL));
+
+    int l, i;
+    for(l = 0; l < loop; l++)
+    {
+        for(i = 0; i < NALOCACOES; i++)
+        {
+            void* endereco = (void*)(uintptr_t)(rand() % 100000);
+            int comprimento = rand() % 10000;
+            bla = kalloc(memBase + (uintptr_t)endereco, comprimento);
+            allocatedAddresses[i] = endereco;
+        }
+
+        lpa_printfLpa(memInfo->lpa);
+
+        for (i = 0; i < NDESALOCACOES; i++) {
+            int index = rand() % NALOCACOES;  // escolhe um indice aleatório = endereco aleatório dos já alocados
+            if (allocatedAddresses[index] != NULL) {
+                kfree(allocatedAddresses[index]);  // libera o endereço
+                allocatedAddresses[index] = NULL;  // libera no array
+            }
+        }
     }
 
-    double* ptr3 = (double*)kalloc(&ptr3, 3 * sizeof(double));
-    if (ptr3 != NULL) {
-        for (int i = 0; i < 3; i++) {
-            ptr3[i] = i + 0.5;
-            printf("Valor de ptr3[%d]: %f\n", i, ptr3[i]);
-        }
-        //kfree(ptr3);
-    }*/
 
-    //lpa_getNode(memInfo->lpa);
+    /*void *bla1 = kalloc(memBase + 4096, 2048);
+    void *bla2 = kalloc(memBase + 6146, 2048);
+    void *bla3 = kalloc(memBase + 8296, 2048);
+    void *bla4 = kalloc(memBase + 12000, 2048);
+    void *bla5 = kalloc(memBase + 17900, 2048);
+    void *bla6 = kalloc(memBase + 26130, 2048);
+    void *bla7 = kalloc(memBase + 14500, 2048);
+    void *bla8 = kalloc(memBase + 20000, 2048);
+    void *bla9 = kalloc(memBase + 23100, 2048);
+    void *bla10 = kalloc(memBase + 30000, 2048);
+    void *bla11 = kalloc(memBase + 33000, 2048);
+    void *bla12 = kalloc(memBase + 37000, 2048);
+    void *bla13 = kalloc(memBase + 40000, 2048);
 
-    //debug();
+    kfree(memBase + 4096);
+    kfree(memBase + 14500);
+    kfree(memBase + 8296);
 
-    void *bla = kalloc(memBase + 4096, 2048);
-    //void *bla1 = kalloc(memBase + 4096, 2048);
-    //void *bla2 = kalloc(memBase + 8296, 2048);
-    void *bla3 = kalloc(memBase + 6146, 2048);
-    void *bla2 = kalloc(memBase + 8296, 2048);
-    /*void *bla1 = 0;
-    void *bla2 = 0;
-    void *bla3 = 0;
-    void *bla4 = 0;*/
-
-    //bla = kalloc(memBase + 4096, 2048);
-    //kalloc(bla + 12000, 2300);
-    //kalloc(bla + 7068, 3200);
-    //kalloc(bla + 9800, 1000);
-    //lpa_marcarUsado(bla + 4095, 2048);*/
+    void *bla14 = kalloc(memBase + 30000, 2048);
+    void *bla15 = kalloc(memBase + 33000, 2048);
+    void *bla16 = kalloc(memBase + 37000, 2048);
+    void *bla17 = kalloc(memBase + 40000, 2048);
+    void *bla18 = kalloc(memBase + 8296, 2048);*/
 
     lpa_printfLpa(memInfo->lpa);
-
-    //kfree(memBase + 4096);
-
-    /*void *endereco = memBase;
-
-    printf("memBase na main: %p\n", endereco);
-
-    Node * no = find(endereco + 1024, &(memInfo->lpa->nodes[0]));
-
-    list_printNode(no);*/
 
     finalizar();
 

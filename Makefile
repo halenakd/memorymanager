@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -g
 
 # nome do executavel e arquivos fonte
 TARGET = gerenciador
-SRC = mainsimulacao.c gerenciador.c 
+SRC = mainsimulacao.c gerenciador.c -lncurses
 # regra padrao
 all: $(TARGET)
 
