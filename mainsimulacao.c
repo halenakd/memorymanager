@@ -14,8 +14,6 @@
 
 //#define TAMANHO_MEMORIA 512 * 1024 * 1024
 #define TAMANHO_MEMORIA 1 << 30
-#define PAGE_SIZE 1 << 14
-
 
 
 /* -----VARIAVEIS EXTERNAS----- */
@@ -62,12 +60,11 @@ int main()
         for(i = 0; i < NALOCACOES; i++)
         {
             void* endereco = (void*)(uintptr_t)(rand() % 100000);
+            printf("%p: ", endereco);
             int comprimento = rand() % 10000;
             bla = kalloc(memBase + (uintptr_t)endereco, comprimento);
             allocatedAddresses[i] = endereco;
         }
-
-        lpa_printfLpa(memInfo->lpa);
 
         for (i = 0; i < NDESALOCACOES; i++) {
             int index = rand() % NALOCACOES;  // escolhe um indice aleatório = endereco aleatório dos já alocados
@@ -79,8 +76,8 @@ int main()
     }
 
 
-    /*void *bla1 = kalloc(memBase + 4096, 2048);
-    void *bla2 = kalloc(memBase + 6146, 2048);
+    //void *bla1 = kalloc(memBase + 4096, 2048);
+    /*void *bla2 = kalloc(memBase + 6146, 2048);
     void *bla3 = kalloc(memBase + 8296, 2048);
     void *bla4 = kalloc(memBase + 12000, 2048);
     void *bla5 = kalloc(memBase + 17900, 2048);

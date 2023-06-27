@@ -72,7 +72,6 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
             void *t1 = no->endereco + no->comprimento; // Fim do nó
             void *t2 = ptr + comprimento; // Fim da região ocupada que será marcada
 
-
             if(no->endereco < ptr) // sobra espaço livre antes
             {
                 // tem espaço livre antes, mas nao tem espaco livre depois
@@ -80,23 +79,22 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                 {
                     /* nó da região usada que ficou depois do espaço livre */
                     Node *new = lpa_getNode(memInfo->lpa);
-                    new->endereco = ptr;
-                    new->comprimento = comprimento;
-                    new->prev = no;
-                    new->next = no->next;
-                    new->status = 'O';
-                    
-                    if (no->prev != NULL)
-                        no->prev->next = new;
-
-                    /* nó da região livre que sobrou antes */
-                    no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
-                    no->next = new;
-
-                    // atualizando o último nó da memória
-                    if(new->next == NULL)
+                    if(new != NULL)
                     {
-                        memInfo->fim = new;
+                        new->endereco = ptr;
+                        new->comprimento = comprimento;
+                        new->prev = no;
+                        new->next = no->next;
+                        new->status = 'O';
+                        
+                        /* nó da região livre que sobrou antes */
+                        no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
+                        no->next = new;
+
+                        if (no->next != NULL)
+                            no->next->prev = new;
+                        else
+                            memInfo->fim = new;
                     }
                 }
                 // tem espaço livre antes e tem espaco livre depois
@@ -104,29 +102,38 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                 {
                     /* nó ocupado que ficou no meio dos dois espaços livres */
                     Node *new = lpa_getNode(memInfo->lpa);
-                    new->endereco = ptr;
-                    new->comprimento = comprimento;
-                    new->prev = no;
-                    new->status = 'O';
-
-                    /* nó novo para a região livre que sobrou depois */
-                    Node *newD = lpa_getNode(memInfo->lpa);
-                    newD->endereco = t2;
-                    newD->comprimento = t1 - t2;
-                    newD->prev = new;
-                    newD->next = no->next;
-                    newD->status = 'L';
-
-                    new->next = newD;
-
-                    /* nó já existente para a região livre que sobrou antes */
-                    no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
-                    no->next = new; // antes tava = no
-
-                    // atualizando o último nó da memória
-                    if(newD->next == NULL)
+                    if(new != NULL)
                     {
-                        memInfo->fim = newD;
+                        Node *newD = lpa_getNode(memInfo->lpa);
+                        if(newD != NULL)
+                        {
+                            new->endereco = ptr;
+                            new->comprimento = comprimento;
+                            new->prev = no;
+                            new->status = 'O';
+
+                            /* nó novo para a região livre que sobrou depois */
+                            newD->endereco = t2 + 1;
+                            newD->comprimento = t1 - t2;
+                            newD->prev = new;
+                            newD->next = no->next;
+                            newD->status = 'L';
+
+                            if(no->next != NULL)
+                                no->next->prev = newD;
+
+                            new->next = newD;
+
+                            /* nó já existente para a região livre que sobrou antes */
+                            no->comprimento = ptr - no->endereco; // atualiza o tamanho da regiao livre que restou
+                            no->next = new; // antes tava = no
+
+                            // atualizando o último nó da memória
+                            if(newD->next == NULL)
+                            {
+                                memInfo->fim = newD;
+                            }
+                        }
                     }
                 }
             }
@@ -140,21 +147,27 @@ void lpa_marcarUsado(void *ptr, unsigned long comprimento)
                 {
                     /* nó novo para a região livre que sobrou depois */
                     Node *new = lpa_getNode(memInfo->lpa);
-                    new->endereco = t2 + 1;
-                    new->comprimento = t1 - (t2);
-                    new->prev = no;
-                    new->next = no->next;
-                    new->status = 'L';
-
-                    /* nó já existente para a regiao ocupada */
-                    no->comprimento = comprimento;
-                    no->next = new;
-                    no->status = 'O';
-
-                    // atualizando o último nó da memória
-                    if(new->next == NULL)
+                    if(new != NULL)
                     {
-                        memInfo->fim = new;
+                        new->endereco = t2 + 1;
+                        new->comprimento = t1 - t2;
+                        new->prev = no;
+                        new->next = no->next;
+                        new->status = 'L';
+
+                        if(no->next != NULL)
+                            no->next->prev = new;
+
+                        /* nó já existente para a regiao ocupada */
+                        no->comprimento = comprimento;
+                        no->next = new;
+                        no->status = 'O';
+
+                        // atualizando o último nó da memória
+                        if(new->next == NULL)
+                        {
+                            memInfo->fim = new;
+                        }
                     }
                 }
             }
@@ -314,9 +327,12 @@ Node *lpa_getNode(ListaPreAlocada *lpa)
             ListaPreAlocada *newLpa = NULL;
             void *t1 = memInfo->fim->prev->endereco + memInfo->fim->prev->comprimento;
             newLpa = (ListaPreAlocada*)(t1);
-            lpa->next = newLpa;
-            lpa_init(newLpa);
-            lpa_marcarUsado(newLpa, sizeof(ListaPreAlocada));
+            if (newLpa != NULL)
+            {
+                lpa->next = newLpa;
+                lpa_init(newLpa);
+                lpa_marcarUsado(&(newLpa), sizeof(ListaPreAlocada));
+            }
         }
         else
         {
